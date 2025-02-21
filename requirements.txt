@@ -1,0 +1,9 @@
+langchain
+langchain-core
+
+huggingface-hub
+langchain-huggingface
+python-dotenv
+numpy
+scikit-learn
+streamlit
