@@ -1,19 +1,15 @@
+from flask import Flask, request, jsonify
 import os
-import streamlit as st
 from dotenv import load_dotenv
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain_huggingface import HuggingFaceEndpoint
 
-# Load environment variables (for local development)
+# Load environment variables
 load_dotenv()
-hf_token = st.secrets["HUGGINGFACEHUB_ACCESS_TOKEN"]
-# Get API token from Streamlit secrets (for deployment) or local environment
-os.environ["HUGGINGFACEHUB_ACCESS_TOKEN"] = hf_token
+hf_token = os.getenv("HUGGINGFACEHUB_ACCESS_TOKEN")
 
-if not hf_token:
-    st.error("Hugging Face API token is missing. Please set it in Streamlit Secrets.")
-    st.stop()
+app = Flask(__name__)
 
 # Load Hugging Face Model
 llm = HuggingFaceEndpoint(
@@ -32,11 +28,16 @@ prompt = PromptTemplate(template=template, input_variables=["question"])
 # Create LLM Chain
 llm_chain = LLMChain(llm=llm, prompt=prompt)
 
-# Streamlit UI
-st.title("🤖 LangChain Question Answering Model")
-st.write("Ask me anything!")
+@app.route("/", methods=["GET"])
+def home():
+    return jsonify({"message": "LangChain Flask API is running!"})
 
-question = st.text_input("Enter your question:")
-if st.button("Get Answer"):
+@app.route("/ask", methods=["POST"])
+def ask_question():
+    data = request.json
+    question = data.get("question", "")
     response = llm_chain.invoke({"question": question})
-    st.write(response.get('text', 'No response received.'))
+    return jsonify({"answer": response.get("text", "No response received.")})
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8000, debug=True)

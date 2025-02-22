@@ -7,13 +7,15 @@ from langchain_huggingface import HuggingFaceEndpoint
 
 # Load environment variables (for local development)
 load_dotenv()
-hf_token = st.secrets["HUGGINGFACEHUB_ACCESS_TOKEN"]
-# Get API token from Streamlit secrets (for deployment) or local environment
-os.environ["HUGGINGFACEHUB_ACCESS_TOKEN"] = hf_token
+
+# Get API token from environment (local) or Streamlit secrets (deployment)
+hf_token = os.getenv("HUGGINGFACEHUB_ACCESS_TOKEN") or st.secrets.get("HUGGINGFACEHUB_ACCESS_TOKEN")
 
 if not hf_token:
-    st.error("Hugging Face API token is missing. Please set it in Streamlit Secrets.")
+    st.error("Hugging Face API token is missing. Please set it in .env (local) or Streamlit Secrets (deployment).")
     st.stop()
+
+os.environ["HUGGINGFACEHUB_ACCESS_TOKEN"] = hf_token
 
 # Load Hugging Face Model
 llm = HuggingFaceEndpoint(
